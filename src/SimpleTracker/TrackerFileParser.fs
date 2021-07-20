@@ -1,3 +1,3 @@
 module SimpleTracker.TrackerFileParser
 
-let parse filename : TrackerItem list = []
+let load filename : TrackerItem list = []

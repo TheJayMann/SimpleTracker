@@ -13,11 +13,13 @@ type Model = {
 }
 
 type Msg =
-| None
+| NoMsg
 | ShowCompletedItems
 | HideCompletedItems
 | ShowOpenFileDialog
 | LoadTrackerItems of TrackerItem list
+
+let mkOptionalMsg f = Option.map f >> Option.defaultValue NoMsg
 
 let init services = 
   let initModel = {
@@ -29,7 +31,7 @@ let init services =
 
 let private updateUI msg model = 
   match msg with
-  | None -> model
+  | NoMsg -> model
   | ShowCompletedItems -> { model with ShowCompletedItems = true }
   | HideCompletedItems -> { model with ShowCompletedItems = false }
   | LoadTrackerItems items -> { model with TrackerItems = items }
@@ -37,8 +39,11 @@ let private updateUI msg model =
 
 let private dispatchCmd msg model = 
   match msg with
-  | None -> Cmd.none
-  | ShowOpenFileDialog -> Cmd.OfTask.perform model.Services.GetTrackerData () LoadTrackerItems
+  | NoMsg -> Cmd.none
+  | ShowOpenFileDialog -> 
+    LoadTrackerItems 
+    |> mkOptionalMsg 
+    |> Cmd.OfTask.perform model.Services.GetTrackerData ()
   | ShowCompletedItems
   | HideCompletedItems 
   | LoadTrackerItems _ -> Cmd.none
@@ -68,6 +73,13 @@ let view model dispatch =
     DockPanel.lastChildFill true
     DockPanel.children[
       menu dispatch
+      CheckBox.create [
+        CheckBox.dock Dock.Top
+        CheckBox.content "Show all items"
+        CheckBox.isChecked model.ShowCompletedItems
+        CheckBox.onUnchecked (fun _ -> dispatch HideCompletedItems)
+        CheckBox.onChecked (fun _ -> dispatch ShowCompletedItems)
+      ]
       ListBox.create[
         ListBox.dataItems model.TrackerItems
       ]
