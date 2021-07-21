@@ -17,11 +17,11 @@ type MainWindow() as this =
 
     this.AttachDevTools()
 
-    let getTrackerData () : TrackerItem list option Task = task {
+    let getTrackerData ()  = task {
       let! fileName = Dialog.openFileDialog this
       return 
         fileName
-        |> Option.map TrackerFileParser.load
+        |> Option.bind TrackerFileParser.load
     }
 
     Program.mkProgram Shell.init Shell.update Shell.view

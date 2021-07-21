@@ -8,7 +8,7 @@ open Avalonia.FuncUI.DSL
 
 type Model = {
   ShowCompletedItems: bool
-  TrackerItems: TrackerItem list
+  TrackerList: TrackerList option
   Services: Services
 }
 
@@ -17,14 +17,14 @@ type Msg =
 | ShowCompletedItems
 | HideCompletedItems
 | ShowOpenFileDialog
-| LoadTrackerItems of TrackerItem list
+| LoadTrackerItems of TrackerList
 
 let mkOptionalMsg f = Option.map f >> Option.defaultValue NoMsg
 
 let init services = 
   let initModel = {
     ShowCompletedItems = false
-    TrackerItems = []
+    TrackerList = None
     Services = services
   }
   initModel, Cmd.none
@@ -34,7 +34,7 @@ let private updateUI msg model =
   | NoMsg -> model
   | ShowCompletedItems -> { model with ShowCompletedItems = true }
   | HideCompletedItems -> { model with ShowCompletedItems = false }
-  | LoadTrackerItems items -> { model with TrackerItems = items }
+  | LoadTrackerItems list -> { model with TrackerList = Some list }
   | ShowOpenFileDialog -> model
 
 let private dispatchCmd msg model = 
@@ -70,19 +70,25 @@ let view model dispatch =
   DockPanel.create [
     DockPanel.verticalAlignment VerticalAlignment.Stretch
     DockPanel.horizontalAlignment HorizontalAlignment.Stretch
-    DockPanel.lastChildFill true
+    DockPanel.lastChildFill model.TrackerList.IsSome
     DockPanel.children[
       menu dispatch
-      CheckBox.create [
-        CheckBox.dock Dock.Top
-        CheckBox.content "Show all items"
-        CheckBox.isChecked model.ShowCompletedItems
-        CheckBox.onUnchecked (fun _ -> dispatch HideCompletedItems)
-        CheckBox.onChecked (fun _ -> dispatch ShowCompletedItems)
-      ]
-      ListBox.create[
-        ListBox.dataItems model.TrackerItems
-      ]
+      if model.TrackerList.IsSome then
+        let trackerList = model.TrackerList.Value
+        TextBlock.create [
+          TextBlock.dock Dock.Top
+          TextBlock.text trackerList.Name
+        ]
+        CheckBox.create [
+          CheckBox.dock Dock.Top
+          CheckBox.content "Show all items"
+          CheckBox.isChecked model.ShowCompletedItems
+          CheckBox.onUnchecked (fun _ -> dispatch HideCompletedItems)
+          CheckBox.onChecked (fun _ -> dispatch ShowCompletedItems)
+        ]
+        ListBox.create [
+          ListBox.dataItems trackerList.Items
+        ]
     ]
   ]
 

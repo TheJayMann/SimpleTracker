@@ -1,3 +1,5 @@
 module SimpleTracker.TrackerFileParser
 
-let load filename : TrackerItem list = []
+let load filename : TrackerList option = None
+
+let save filename trackerList = ()
