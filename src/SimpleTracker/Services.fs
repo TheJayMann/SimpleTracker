@@ -4,5 +4,5 @@ open System.Threading.Tasks
 
 [<ReferenceEquality>]
 type Services = {
-  GetTrackerData : unit -> TrackerList option Task
+  GetTrackerData : unit -> TaskList option Task
 }

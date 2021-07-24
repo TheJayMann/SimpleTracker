@@ -8,7 +8,7 @@ open Avalonia.FuncUI.DSL
 
 type Model = {
   ShowCompletedItems: bool
-  TrackerList: TrackerList option
+  TaskList: TaskList option
   Services: Services
 }
 
@@ -17,14 +17,14 @@ type Msg =
 | ShowCompletedItems
 | HideCompletedItems
 | ShowOpenFileDialog
-| LoadTrackerItems of TrackerList
+| LoadTaskList of TaskList
 
 let mkOptionalMsg f = Option.map f >> Option.defaultValue NoMsg
 
 let init services = 
   let initModel = {
     ShowCompletedItems = false
-    TrackerList = None
+    TaskList = None
     Services = services
   }
   initModel, Cmd.none
@@ -34,19 +34,19 @@ let private updateUI msg model =
   | NoMsg -> model
   | ShowCompletedItems -> { model with ShowCompletedItems = true }
   | HideCompletedItems -> { model with ShowCompletedItems = false }
-  | LoadTrackerItems list -> { model with TrackerList = Some list }
+  | LoadTaskList list -> { model with TaskList = Some list }
   | ShowOpenFileDialog -> model
 
 let private dispatchCmd msg model = 
   match msg with
   | NoMsg -> Cmd.none
   | ShowOpenFileDialog -> 
-    LoadTrackerItems 
+    LoadTaskList 
     |> mkOptionalMsg 
     |> Cmd.OfTask.perform model.Services.GetTrackerData ()
   | ShowCompletedItems
   | HideCompletedItems 
-  | LoadTrackerItems _ -> Cmd.none
+  | LoadTaskList _ -> Cmd.none
 
 let update msg model = updateUI msg model, dispatchCmd msg model
 
@@ -70,14 +70,14 @@ let view model dispatch =
   DockPanel.create [
     DockPanel.verticalAlignment VerticalAlignment.Stretch
     DockPanel.horizontalAlignment HorizontalAlignment.Stretch
-    DockPanel.lastChildFill model.TrackerList.IsSome
+    DockPanel.lastChildFill model.TaskList.IsSome
     DockPanel.children[
       menu dispatch
-      if model.TrackerList.IsSome then
-        let trackerList = model.TrackerList.Value
+      if model.TaskList.IsSome then
+        let taskList = model.TaskList.Value
         TextBlock.create [
           TextBlock.dock Dock.Top
-          TextBlock.text trackerList.Name
+          TextBlock.text taskList.Name
         ]
         CheckBox.create [
           CheckBox.dock Dock.Top
@@ -87,7 +87,7 @@ let view model dispatch =
           CheckBox.onChecked (fun _ -> dispatch ShowCompletedItems)
         ]
         ListBox.create [
-          ListBox.dataItems trackerList.Items
+          ListBox.dataItems taskList.Items
         ]
     ]
   ]

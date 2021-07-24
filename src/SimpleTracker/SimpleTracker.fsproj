@@ -5,7 +5,7 @@
     <WarnOn>3390;$(WarnOn)</WarnOn>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="TrackerList.fs" />
+    <Compile Include="TaskList.fs" />
     <Compile Include="TrackerFileParser.fs" />
     <Compile Include="Dialog.fs" />
     <Compile Include="Services.fs" />
@@ -17,6 +17,7 @@
     <PackageReference Include="Avalonia.Desktop" Version="0.10.6" />
     <PackageReference Include="Avalonia.Diagnostics" Version="0.10.6" />
     <PackageReference Include="FSharp.Data" Version="4.1.1" />
+    <PackageReference Include="fsharpplus" Version="1.2.1" />
     <PackageReference Include="JaggerJo.Avalonia.FuncUI" Version="0.5.0-beta" />
     <PackageReference Include="JaggerJo.Avalonia.FuncUI.DSL" Version="0.5.0-beta" />
     <PackageReference Include="JaggerJo.Avalonia.FuncUI.Elmish" Version="0.5.0-beta" />
