@@ -25,7 +25,7 @@ let load filename : TaskList option =
       |> tuple2 headers.[1]
       |> Some
 
-  let parseRow reqDefs (fields: _ array) =
+  let parseRow reqDefs (fields: _ array) index =
     let parseReqs (fields: _ array, reqs) { RequirementDefinition.Name = name; Count = count} =
       let mkTaskReq name = { TaskRequirement.Name = name }
       fields.[count..], { TaskRequirementSection.Name = name; Requirements = fields.[..count - 1] |> Seq.filter (not << String.IsNullOrWhiteSpace) |> Seq.map mkTaskReq |> List.ofSeq } :: reqs
@@ -33,6 +33,7 @@ let load filename : TaskList option =
 
     if fields.Length < 2 then None else Some {
       TaskItem.Name = fields.[1]
+      Id = index
       IsComplete = fields.[0] |> String.IsNullOrWhiteSpace |> not
       RequirementSections =
         List.fold parseReqs (fields.[2..], []) reqDefs
@@ -44,9 +45,9 @@ let load filename : TaskList option =
 
   let parseRows reqDefs = 
     let getCols (row: CsvRow) = row.Columns
-    let parseRow = getCols >> parseRow reqDefs 
+    let parseRow = getCols >> parseRow reqDefs |> flip
     csv.Rows
-    |> Seq.map parseRow 
+    |> Seq.mapi parseRow 
     |> Seq.choose id
     |> List.ofSeq
   

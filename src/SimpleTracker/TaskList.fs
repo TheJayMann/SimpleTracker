@@ -10,6 +10,7 @@ type TaskRequirementSection = {
 }
 
 type TaskItem = {
+  Id: int
   IsComplete: bool
   Name: string
   RequirementSections: TaskRequirementSection list
