@@ -62,12 +62,17 @@ let private dispatchCmd msg model =
     |> mkOptionalMsg 
     |> Cmd.OfTask.perform model.Services.GetTrackerData ()
   | CompleteItem _
-  | UndoItem _ -> Cmd.none // TODO: implement auto saving
+  | UndoItem _ -> 
+    model.TaskList
+    |>> fun tl -> Cmd.OfFunc.perform TrackerFileParser.save tl (fun () -> NoMsg)
+    |> Option.defaultValue Cmd.none
   | ShowCompletedItems
   | HideCompletedItems 
   | LoadTaskList _ -> Cmd.none
 
-let update msg model = updateUI msg model, dispatchCmd msg model
+let update msg model = 
+  let newModel = updateUI msg model
+  newModel, dispatchCmd msg newModel
 
 let private menuView dispatch = 
   Menu.create [
@@ -97,7 +102,7 @@ let private taskItemViewTemplate dispatch item =
       for section in item.RequirementSections do
         TextBlock.create [
           TextBlock.fontWeight FontWeight.Bold
-          TextBlock.text $"{section.Name}:"
+          TextBlock.text $"{section.Definition.Name}:"
 
           Thickness(15., 0., 0., 0.)
           |> TextBlock.margin 

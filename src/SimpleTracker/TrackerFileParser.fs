@@ -26,9 +26,9 @@ let load filename : TaskList option =
       |> Some
 
   let parseRow reqDefs (fields: _ array) index =
-    let parseReqs (fields: _ array, reqs) { RequirementDefinition.Name = name; Count = count} =
+    let parseReqs (fields: _ array, reqs) def =
       let mkTaskReq name = { TaskRequirement.Name = name }
-      fields.[count..], { TaskRequirementSection.Name = name; Requirements = fields.[..count - 1] |> Seq.filter (not << String.IsNullOrWhiteSpace) |> Seq.map mkTaskReq |> List.ofSeq } :: reqs
+      fields.[def.Count..], { Definition = def; Requirements = fields.[..def.Count - 1] |> Seq.filter (not << String.IsNullOrWhiteSpace) |> Seq.map mkTaskReq |> List.ofSeq } :: reqs
 
 
     if fields.Length < 2 then None else Some {
@@ -65,4 +65,38 @@ let load filename : TaskList option =
   |> optionalExpandSnd parseRows
   |>> mkTaskList
   
-let save taskList = ()
+let save taskList =
+  // Cannot create a CsvFile directly from scratch, so load the existing file and remove all rows
+  let csv = CsvFile.Load(taskList.FileName)
+  
+  let rowSize = 2 + (taskList.Requirements |> List.sumBy (fun r -> r.Count))
+
+  
+  let mkRowFields taskItem =
+    let inline getName v = (^a:(member Name: string)(v))
+    let inline getReqs v = (^a:(member Requirements: 'b)(v))
+    let row = Array.zeroCreate rowSize
+    row.[0] <- if taskItem.IsComplete then "✓" else ""
+    row.[1] <- taskItem.Name
+    let fillRow index reqSec =
+      let reqs = 
+        reqSec 
+        |> getReqs 
+        |> Seq.map getName 
+        |> Array.ofSeq
+      Array.Copy(reqs, 0, row, index, reqs.Length)
+      index + reqSec.Definition.Count
+
+    taskItem.RequirementSections
+    |> List.fold fillRow 2
+    |> ignore
+    row
+
+  let mkRow taskItem = CsvRow(csv, mkRowFields taskItem)
+
+  let csv = 
+    taskList.Items
+    |> Seq.map mkRow
+    |> csv.Truncate(0).Append
+  
+  csv.Save taskList.FileName

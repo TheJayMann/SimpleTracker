@@ -4,8 +4,13 @@ type TaskRequirement = {
   Name: string
 }
 
-type TaskRequirementSection = {
+type RequirementDefinition = {
   Name: string
+  Count: int
+}
+
+type TaskRequirementSection = {
+  Definition: RequirementDefinition
   Requirements: TaskRequirement list
 }
 
@@ -14,11 +19,6 @@ type TaskItem = {
   IsComplete: bool
   Name: string
   RequirementSections: TaskRequirementSection list
-}
-
-type RequirementDefinition = {
-  Name: string
-  Count: int
 }
 
 type TaskList = {
